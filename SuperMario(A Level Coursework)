@@ -1,0 +1,114 @@
+import pygame
+import sys
+
+# Initialize pygame
+pygame.init()
+
+# Screen dimensions
+WIDTH, HEIGHT = 800, 400
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Super Mario Pygame")
+
+# Colors
+WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+
+# Game variables
+clock = pygame.time.Clock()
+gravity = 0.5
+
+# Player class
+class Player:
+    def __init__(self):
+        self.image = pygame.Surface((40, 60))
+        self.image.fill(BLUE)
+        self.rect = self.image.get_rect(midbottom=(100, HEIGHT - 40))
+        self.velocity_y = 0
+        self.speed = 5
+        self.jumping = False
+
+    def move(self, keys):
+        if keys[pygame.K_LEFT]:
+            self.rect.x -= self.speed
+        if keys[pygame.K_RIGHT]:
+            self.rect.x += self.speed
+
+    def jump(self, keys):
+        if keys[pygame.K_SPACE] and not self.jumping:
+            self.velocity_y = -12
+            self.jumping = True
+
+    def apply_gravity(self):
+        self.velocity_y += gravity
+        self.rect.y += self.velocity_y
+        if self.rect.bottom >= HEIGHT - 40:
+            self.rect.bottom = HEIGHT - 40
+            self.jumping = False
+
+    def update(self, keys):
+        self.move(keys)
+        self.jump(keys)
+        self.apply_gravity()
+        screen.blit(self.image, self.rect)
+
+# Enemy class
+class Enemy:
+    def __init__(self, x, y):
+        self.image = pygame.Surface((40, 40))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect(midbottom=(x, y))
+        self.speed = 2
+        self.direction = 1
+
+    def move(self):
+        self.rect.x += self.speed * self.direction
+        if self.rect.right >= WIDTH or self.rect.left <= 0:
+            self.direction *= -1
+
+    def update(self):
+        self.move()
+        screen.blit(self.image, self.rect)
+
+# Platform class
+class Platform:
+    def __init__(self, x, y, width, height):
+        self.image = pygame.Surface((width, height))
+        self.image.fill(GREEN)
+        self.rect = self.image.get_rect(topleft=(x, y))
+
+    def draw(self):
+        screen.blit(self.image, self.rect)
+
+# Create game objects
+player = Player()
+enemy = Enemy(600, HEIGHT - 40)
+platforms = [
+    Platform(200, 300, 100, 20),
+    Platform(400, 250, 100, 20),
+    Platform(600, 200, 100, 20)
+]
+
+# Game loop
+running = True
+while running:
+    screen.fill(WHITE)
+    keys = pygame.key.get_pressed()
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    
+    # Update objects
+    player.update(keys)
+    enemy.update()
+    
+    for platform in platforms:
+        platform.draw()
+
+    pygame.display.update()
+    clock.tick(60)
+
+pygame.quit()
+sys.exit()
